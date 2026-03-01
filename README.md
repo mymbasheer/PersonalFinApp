@@ -1,1 +1,1 @@
-# PersonalFinApp
+# Personal Financial Application
