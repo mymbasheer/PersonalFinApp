@@ -1,0 +1,96 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:   # allows manual trigger from GitHub UI
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest   # free GitHub-hosted runner, Android SDK pre-installed
+
+    steps:
+      # ── 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Set up Java 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # ── 3. Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      # ── 4. Install JS dependencies
+      - name: Install Node dependencies
+        working-directory: mobile
+        run: npm ci
+
+      # ── 5. Cache Gradle
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      # ── 6. Make gradlew executable
+      - name: Make gradlew executable
+        working-directory: mobile/android
+        run: chmod +x gradlew
+
+      # ── 7. Build RELEASE APK with signing
+      - name: Build Release APK
+        working-directory: mobile/android
+        env:
+          KEYSTORE_BASE64:        ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD:      ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS:              ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:           ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # Decode keystore from GitHub Secret (base64 encoded)
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > app/personalfinapp.keystore
+            ./gradlew assembleRelease \
+              -Pandroid.injected.signing.store.file=personalfinapp.keystore \
+              -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+              -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+              -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          else
+            # Build unsigned debug APK if no signing keys configured
+            echo "⚠ No signing keys — building debug APK"
+            ./gradlew assembleDebug
+          fi
+
+      # ── 8. Upload APK as artifact (download from GitHub Actions page)
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PersonalFinApp-release-${{ github.run_number }}
+          path: |
+            mobile/android/app/build/outputs/apk/release/app-release.apk
+            mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: warn
+          retention-days: 30
+
+      # ── 9. Print APK info
+      - name: APK build summary
+        run: |
+          echo "## ✅ Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          find mobile/android/app/build/outputs/apk -name "*.apk" 2>/dev/null | while read f; do
+            SIZE=$(du -sh "$f" | cut -f1)
+            echo "- \`$(basename $f)\` — $SIZE" >> $GITHUB_STEP_SUMMARY
+          done

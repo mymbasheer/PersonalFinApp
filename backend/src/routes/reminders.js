@@ -1,0 +1,8 @@
+// backend/src/routes/reminders.js
+'use strict';
+const r = require('express').Router(), auth = require('../middleware/auth'), {getDB} = require('../utils/db');
+r.get('/', auth, (req,res) => res.json({reminders: getDB().prepare('SELECT * FROM reminders WHERE user_id=? ORDER BY due_date').all(req.user.id)}));
+r.post('/', auth, (req,res) => { const {title,reminderType,dueDate,amount,recurring,icon,color}=req.body; if(!title||!dueDate) return res.status(422).json({error:'title and dueDate required'}); const db=getDB(); const ins=db.prepare('INSERT INTO reminders(user_id,title,reminder_type,due_date,amount,recurring,icon,color) VALUES(?,?,?,?,?,?,?,?)').run(req.user.id,title,reminderType||'bill',dueDate,Number(amount)||0,recurring||'Monthly',icon||'🔔',color||'#D4A843'); res.status(201).json({reminder:db.prepare('SELECT * FROM reminders WHERE id=?').get(ins.lastInsertRowid)}); });
+r.put('/:id', auth, (req,res) => { const db=getDB(); const rem=db.prepare('SELECT * FROM reminders WHERE id=? AND user_id=?').get(req.params.id,req.user.id); if(!rem) return res.status(404).json({error:'Not found'}); db.prepare('UPDATE reminders SET enabled=? WHERE id=?').run(req.body.enabled!=null?req.body.enabled?1:0:rem.enabled,rem.id); res.json({reminder:db.prepare('SELECT * FROM reminders WHERE id=?').get(rem.id)}); });
+r.delete('/:id', auth, (req,res) => { const rem=getDB().prepare('SELECT id FROM reminders WHERE id=? AND user_id=?').get(req.params.id,req.user.id); if(!rem) return res.status(404).json({error:'Not found'}); getDB().prepare('DELETE FROM reminders WHERE id=?').run(rem.id); res.json({success:true}); });
+module.exports = r;
