@@ -9,97 +9,109 @@ export const api = axios.create({
 });
 
 api.interceptors.response.use(
-  r => r,
-  err => {
+  (r: any) => r,
+  (err: any) => {
     const msg = err.response?.data?.error || err.message || 'Network error';
+    if (err.response?.status === 401) {
+      // Clear token and kick to login screen by getting the store directly
+      // Avoid circular dependency by using dynamic require or just clearing AsyncStorage
+      // and firing an event or directly calling getState
+      try {
+        // @ts-ignore
+        const { useAuthStore } = require('../store/authStore');
+        useAuthStore.getState().logout();
+      } catch (e) {
+        console.error('Failed to logout on 401', e);
+      }
+    }
     return Promise.reject(new Error(msg));
   }
 );
 
 // ── Auth
 export const authAPI = {
-  register:  (d: any) => api.post('/auth/register', d),
-  login:     (phone: string, password: string) => api.post('/auth/login', { phone, password }),
-  bioLogin:  (phone: string) => api.post('/auth/biometric-login', { phone }),
-  bioReg:    (credentialId: string) => api.post('/auth/biometric-register', { credentialId }),
-  me:        () => api.get('/auth/me'),
+  register: (d: any) => api.post('/auth/register', d),
+  login: (phone: string, password: string) => api.post('/auth/login', { phone, password }),
+  bioLogin: (phone: string) => api.post('/auth/biometric-login', { phone }),
+  bioReg: (credentialId: string) => api.post('/auth/biometric-register', { credentialId }),
+  me: () => api.get('/auth/me'),
 };
 
 // ── Transactions
 export const txnAPI = {
-  list:    (params?: any)  => api.get('/transactions', { params }),
+  list: (params?: any) => api.get('/transactions', { params }),
   summary: (month: string) => api.get('/transactions/summary', { params: { month } }),
-  add:     (d: any)        => api.post('/transactions', d),
-  update:  (id: number, d: any) => api.put(`/transactions/${id}`, d),
-  delete:  (id: number)    => api.delete(`/transactions/${id}`),
+  add: (d: any) => api.post('/transactions', d),
+  update: (id: number, d: any) => api.put(`/transactions/${id}`, d),
+  delete: (id: number) => api.delete(`/transactions/${id}`),
 };
 
 // ── Income
 export const incomeAPI = {
-  list:   () => api.get('/income'),
-  add:    (d: any) => api.post('/income', d),
+  list: () => api.get('/income'),
+  add: (d: any) => api.post('/income', d),
   delete: (id: number) => api.delete(`/income/${id}`),
 };
 
 // ── Goals
 export const goalsAPI = {
-  list:    () => api.get('/goals'),
-  add:     (d: any) => api.post('/goals', d),
+  list: () => api.get('/goals'),
+  add: (d: any) => api.post('/goals', d),
   deposit: (id: number, amount: number) => api.put(`/goals/${id}/deposit`, { amount }),
-  delete:  (id: number) => api.delete(`/goals/${id}`),
+  delete: (id: number) => api.delete(`/goals/${id}`),
 };
 
 // ── Debts
 export const debtsAPI = {
-  list:     () => api.get('/debts'),
-  add:      (d: any) => api.post('/debts', d),
+  list: () => api.get('/debts'),
+  add: (d: any) => api.post('/debts', d),
   schedule: (id: number) => api.get(`/debts/${id}/schedule`),
-  delete:   (id: number) => api.delete(`/debts/${id}`),
+  delete: (id: number) => api.delete(`/debts/${id}`),
 };
 
 // ── Assets / Net Worth
 export const assetsAPI = {
-  networth:      () => api.get('/assets/networth'),
-  listAssets:    () => api.get('/assets'),
-  addAsset:      (d: any) => api.post('/assets', d),
-  updateAsset:   (id: number, d: any) => api.put(`/assets/${id}`, d),
-  deleteAsset:   (id: number) => api.delete(`/assets/${id}`),
+  networth: () => api.get('/assets/networth'),
+  listAssets: () => api.get('/assets'),
+  addAsset: (d: any) => api.post('/assets', d),
+  updateAsset: (id: number, d: any) => api.put(`/assets/${id}`, d),
+  deleteAsset: (id: number) => api.delete(`/assets/${id}`),
 };
 
 // ── Insurance
 export const insuranceAPI = {
-  list:   () => api.get('/insurance'),
-  add:    (d: any) => api.post('/insurance', d),
+  list: () => api.get('/insurance'),
+  add: (d: any) => api.post('/insurance', d),
   delete: (id: number) => api.delete(`/insurance/${id}`),
 };
 
 // ── Reminders
 export const remindersAPI = {
-  list:   () => api.get('/reminders'),
-  add:    (d: any) => api.post('/reminders', d),
+  list: () => api.get('/reminders'),
+  add: (d: any) => api.post('/reminders', d),
   toggle: (id: number, enabled: boolean) => api.put(`/reminders/${id}`, { enabled }),
   delete: (id: number) => api.delete(`/reminders/${id}`),
 };
 
 // ── Market
 export const marketAPI = {
-  fx:   () => api.get('/market/fx'),
+  fx: () => api.get('/market/fx'),
   gold: () => api.get('/market/gold'),
 };
 
 // ── Reports
 export const reportsAPI = {
-  tax:     () => api.get('/reports/tax'),
-  networth:() => api.get('/reports/networth'),
+  tax: () => api.get('/reports/tax'),
+  networth: () => api.get('/reports/networth'),
   monthly: (month: string) => api.get('/reports/monthly', { params: { month } }),
 };
 
 // ── User
 export const userAPI = {
-  profile:      () => api.get('/users/profile'),
-  updateProfile:(d: any) => api.put('/users/profile', d),
-  getBudgets:   () => api.get('/users/budgets'),
-  setBudgets:   (budgets: any) => api.put('/users/budgets', { budgets }),
+  profile: () => api.get('/users/profile'),
+  updateProfile: (d: any) => api.put('/users/profile', d),
+  getBudgets: () => api.get('/users/budgets'),
+  setBudgets: (budgets: any) => api.put('/users/budgets', { budgets }),
   setPushToken: (token: string) => api.put('/users/push-token', { token }),
 };
 
