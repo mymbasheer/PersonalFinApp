@@ -50,7 +50,7 @@ export default function NetWorthScreen() {
   };
 
   const remove = (id:number, endpoint:string) =>
-    Alert.alert('Remove?','This cannot be undone.',[{text:'Cancel',style:'cancel'},{text:'Remove',style:'destructive',onPress:async()=>{await api.del(`/${endpoint}/${id}`);load();}}]);
+    Alert.alert('Remove?','This cannot be undone.',[{text:'Cancel',style:'cancel'},{text:'Remove',style:'destructive',onPress:async()=>{await api.delete(`/${endpoint}/${id}`);load();}}]);
 
   const ItemSection = ({title,items,type,total,color}:any) => (
     <View style={s.section}>

@@ -47,7 +47,7 @@ export default function GoalsScreen() {
     } catch(e:any){Alert.alert('Error',e.message);} finally{setSaving(false);}
   };
 
-  const remove = (id:number) => Alert.alert('Delete Goal?','This cannot be undone.',[{text:'Cancel',style:'cancel'},{text:'Delete',style:'destructive',onPress:async()=>{await api.del(`/goals/${id}`);load();}}]);
+  const remove = (id:number) => Alert.alert('Delete Goal?','This cannot be undone.',[{text:'Cancel',style:'cancel'},{text:'Delete',style:'destructive',onPress:async()=>{await api.delete(`/goals/${id}`);load();}}]);
 
   const daysLeft = (dl:string) => {
     if(!dl) return null;

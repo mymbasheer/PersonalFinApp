@@ -92,7 +92,7 @@ export default function DebtsScreen() {
                   <Text style={s.amortTxt}>Interest: LKR {fmt(next.interest)} | Principal: LKR {fmt(next.principal)}</Text>
                 </View>
               )}
-              <TouchableOpacity style={s.removeBtn} onPress={()=>Alert.alert('Remove Debt?','',[{text:'Cancel',style:'cancel'},{text:'Remove',style:'destructive',onPress:async()=>{await api.del(`/debts/${d.id}`);load();}}])}>
+              <TouchableOpacity style={s.removeBtn} onPress={()=>Alert.alert('Remove Debt?','',[{text:'Cancel',style:'cancel'},{text:'Remove',style:'destructive',onPress:async()=>{await api.delete(`/debts/${d.id}`);load();}}])}>
                 <Text style={s.removeTxt}>Remove Loan</Text>
               </TouchableOpacity>
             </View>

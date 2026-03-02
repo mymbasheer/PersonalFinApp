@@ -127,3 +127,12 @@ export async function exportLoanScheduleXLSX(debt: any, schedule: any[]) {
   await Share.share({ url: `file://${path}`, title: 'Loan Schedule' });
   return path;
 }
+
+export const exportService = {
+  taxPDF: exportTaxPDF,
+  monthlyPDF: exportMonthlyPDF,
+  transactionsXLS: exportTransactionsXLSX as any,
+  loansXLS: async (debts: any[]) => { console.warn('Not implemented for multiple loans yet'); },
+  budgetXLS: async (user: any, txns: any, budgets: any) => { console.warn('Budget export not implemented'); },
+  networthPDF: async (user: any, assets: any, liabilities: any) => { console.warn('Net worth PDF not implemented'); },
+};

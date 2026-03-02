@@ -9,7 +9,7 @@ import { Picker } from '@react-native-picker/picker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../services/api';
-import { ocr } from '../../services/ocr';
+import { scanReceipt } from '../../services/ocr';
 import { COLORS, FONTS, SPACING, RADIUS, EXPENSE_CATEGORIES, PAYMENT_METHODS } from '../../utils/constants';
 
 const fmt = (n: number) => Math.round(n || 0).toLocaleString('en-LK');
@@ -17,15 +17,15 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 
 export default function ExpensesScreen() {
   const { user } = useAuthStore();
-  const [txns, setTxns]         = useState<any[]>([]);
-  const [summary, setSummary]   = useState<any>(null);
-  const [budgets, setBudgets]   = useState<any>({});
+  const [txns, setTxns] = useState<any[]>([]);
+  const [summary, setSummary] = useState<any>(null);
+  const [budgets, setBudgets] = useState<any>({});
   const [refreshing, setRefreshing] = useState(false);
-  const [showAdd, setShowAdd]   = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
   const [showScan, setShowScan] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [ocrResult, setOcrResult] = useState<any>(null);
-  const [saving, setSaving]     = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const month = new Date().toISOString().slice(0, 7);
 
@@ -43,7 +43,7 @@ export default function ExpensesScreen() {
       ]);
       setTxns(txRes.data.transactions || []);
       setSummary(sumRes.data);
-    } catch {}
+    } catch { }
     setRefreshing(false);
   }, []);
 
@@ -61,7 +61,7 @@ export default function ExpensesScreen() {
         txnDate: fd.date, note: fd.note, isRecurring: fd.isRecurring,
       });
       setShowAdd(false); setShowScan(false); setOcrResult(null);
-      setForm({ category:'food', description:'', amount:'', date:todayStr(), paymentMethod:'Cash', note:'', isRecurring:false });
+      setForm({ category: 'food', description: '', amount: '', date: todayStr(), paymentMethod: 'Cash', note: '', isRecurring: false });
       load();
     } catch (e: any) {
       Alert.alert('Error', e.message);
@@ -73,7 +73,7 @@ export default function ExpensesScreen() {
     if (!result.assets?.[0]?.uri) return;
     setScanning(true);
     try {
-      const parsed = await ocr.scanReceipt(result.assets[0].uri);
+      const parsed = await scanReceipt(result.assets[0].uri);
       setOcrResult(parsed);
       setForm(f => ({
         ...f,
@@ -239,50 +239,50 @@ export default function ExpensesScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:          { flex: 1, backgroundColor: COLORS.bg },
-  header:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SPACING.xl, paddingBottom: SPACING.md },
-  title:         { fontFamily: FONTS.display, fontSize: 28, color: COLORS.text },
-  headerBtns:    { flexDirection: 'row', gap: 8 },
-  scanBtn:       { backgroundColor: COLORS.purple, borderRadius: RADIUS.md, paddingVertical: 9, paddingHorizontal: 14 },
-  scanBtnText:   { color: '#fff', fontFamily: FONTS.bold, fontSize: 13 },
-  addBtn:        { backgroundColor: COLORS.gold, borderRadius: RADIUS.md, paddingVertical: 9, paddingHorizontal: 16 },
-  addBtnText:    { color: COLORS.bg, fontFamily: FONTS.bold, fontSize: 13 },
-  overCard:      { backgroundColor: COLORS.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.lg, padding: SPACING.xl, borderWidth: 1, borderColor: COLORS.border, marginBottom: SPACING.lg },
-  overLabel:     { fontSize: 10, color: COLORS.muted, fontFamily: FONTS.bold, letterSpacing: 1.5, marginBottom: 6 },
-  overAmt:       { fontFamily: FONTS.mono, fontSize: 30, fontWeight: '800', color: COLORS.text, marginBottom: 12 },
-  pbarWrap:      { height: 5, backgroundColor: COLORS.border, borderRadius: 5, overflow: 'hidden', marginTop: 4 },
-  pbarFill:      { height: '100%', borderRadius: 5 },
-  section:       { backgroundColor: COLORS.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.lg, borderWidth: 1, borderColor: COLORS.border },
-  sectionLabel:  { fontSize: 11, color: COLORS.gold, fontFamily: FONTS.bold, letterSpacing: 1.5, marginBottom: 14 },
-  catRow:        { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  catIcon:       { fontSize: 20, marginRight: 12, width: 28 },
-  catLabelRow:   { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  catLabel:      { fontSize: 13, color: COLORS.text, fontFamily: FONTS.medium },
-  catAmt:        { fontFamily: FONTS.mono, fontSize: 12, fontWeight: '700' },
-  txnRow:        { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.el, borderRadius: RADIUS.md, padding: 11, marginBottom: 6, borderLeftWidth: 3 },
-  txnIcon:       { fontSize: 18, marginRight: 12 },
-  txnDesc:       { fontSize: 13, color: COLORS.text, fontFamily: FONTS.medium },
-  txnMeta:       { fontSize: 11, color: COLORS.soft, fontFamily: FONTS.regular, marginTop: 2 },
-  txnAmt:        { fontFamily: FONTS.mono, fontSize: 13, fontWeight: '700', color: COLORS.red },
-  empty:         { color: COLORS.muted, fontSize: 13, textAlign: 'center', padding: 16, fontFamily: FONTS.regular },
+  root: { flex: 1, backgroundColor: COLORS.bg },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SPACING.xl, paddingBottom: SPACING.md },
+  title: { fontFamily: FONTS.display, fontSize: 28, color: COLORS.text },
+  headerBtns: { flexDirection: 'row', gap: 8 },
+  scanBtn: { backgroundColor: COLORS.purple, borderRadius: RADIUS.md, paddingVertical: 9, paddingHorizontal: 14 },
+  scanBtnText: { color: '#fff', fontFamily: FONTS.bold, fontSize: 13 },
+  addBtn: { backgroundColor: COLORS.gold, borderRadius: RADIUS.md, paddingVertical: 9, paddingHorizontal: 16 },
+  addBtnText: { color: COLORS.bg, fontFamily: FONTS.bold, fontSize: 13 },
+  overCard: { backgroundColor: COLORS.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.lg, padding: SPACING.xl, borderWidth: 1, borderColor: COLORS.border, marginBottom: SPACING.lg },
+  overLabel: { fontSize: 10, color: COLORS.muted, fontFamily: FONTS.bold, letterSpacing: 1.5, marginBottom: 6 },
+  overAmt: { fontFamily: FONTS.mono, fontSize: 30, fontWeight: '800', color: COLORS.text, marginBottom: 12 },
+  pbarWrap: { height: 5, backgroundColor: COLORS.border, borderRadius: 5, overflow: 'hidden', marginTop: 4 },
+  pbarFill: { height: '100%', borderRadius: 5 },
+  section: { backgroundColor: COLORS.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.lg, borderWidth: 1, borderColor: COLORS.border },
+  sectionLabel: { fontSize: 11, color: COLORS.gold, fontFamily: FONTS.bold, letterSpacing: 1.5, marginBottom: 14 },
+  catRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  catIcon: { fontSize: 20, marginRight: 12, width: 28 },
+  catLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  catLabel: { fontSize: 13, color: COLORS.text, fontFamily: FONTS.medium },
+  catAmt: { fontFamily: FONTS.mono, fontSize: 12, fontWeight: '700' },
+  txnRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.el, borderRadius: RADIUS.md, padding: 11, marginBottom: 6, borderLeftWidth: 3 },
+  txnIcon: { fontSize: 18, marginRight: 12 },
+  txnDesc: { fontSize: 13, color: COLORS.text, fontFamily: FONTS.medium },
+  txnMeta: { fontSize: 11, color: COLORS.soft, fontFamily: FONTS.regular, marginTop: 2 },
+  txnAmt: { fontFamily: FONTS.mono, fontSize: 13, fontWeight: '700', color: COLORS.red },
+  empty: { color: COLORS.muted, fontSize: 13, textAlign: 'center', padding: 16, fontFamily: FONTS.regular },
   // Modal
-  modalRoot:     { flex: 1, backgroundColor: COLORS.bg, padding: SPACING.xl },
-  modalHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 },
-  modalTitle:    { fontFamily: FONTS.display, fontSize: 22, color: COLORS.text },
-  closeBtn:      { backgroundColor: COLORS.el, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.sm, width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  closeBtnText:  { color: COLORS.soft, fontSize: 16 },
-  label:         { fontSize: 11, color: COLORS.soft, fontFamily: FONTS.semiBold, letterSpacing: 1, marginBottom: 6, marginTop: 12 },
-  input:         { backgroundColor: COLORS.el, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, padding: 12, color: COLORS.text, fontSize: 14, fontFamily: FONTS.regular },
-  row2:          { flexDirection: 'row' },
-  pickerWrap:    { backgroundColor: COLORS.el, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, overflow: 'hidden', marginBottom: 4 },
-  picker:        { color: COLORS.text, height: 50 },
-  saveBtn:       { backgroundColor: COLORS.gold, borderRadius: RADIUS.md, padding: 14, alignItems: 'center', marginTop: 20, marginBottom: 32 },
-  saveBtnText:   { color: COLORS.bg, fontFamily: FONTS.bold, fontSize: 15 },
-  ocrInfo:       { backgroundColor: 'rgba(139,92,246,0.1)', borderWidth: 1, borderColor: 'rgba(139,92,246,0.3)', borderRadius: RADIUS.md, padding: 14, marginBottom: 16, alignItems: 'center' },
-  ocrInfoTitle:  { fontSize: 13, color: COLORS.purple, fontFamily: FONTS.semiBold },
-  ocrInfoSub:    { fontSize: 11, color: COLORS.muted, fontFamily: FONTS.regular, marginTop: 4, textAlign: 'center' },
-  ocrBtn:        { backgroundColor: COLORS.purple, borderRadius: RADIUS.md, padding: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', marginBottom: 16 },
-  ocrBtnText:    { color: '#fff', fontFamily: FONTS.bold, fontSize: 14 },
-  ocrBadge:      { backgroundColor: 'rgba(39,174,96,0.1)', borderWidth: 1, borderColor: 'rgba(39,174,96,0.3)', borderRadius: RADIUS.md, padding: 10, marginBottom: 14 },
-  ocrBadgeText:  { color: COLORS.green, fontSize: 13, fontFamily: FONTS.semiBold, textAlign: 'center' },
+  modalRoot: { flex: 1, backgroundColor: COLORS.bg, padding: SPACING.xl },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 },
+  modalTitle: { fontFamily: FONTS.display, fontSize: 22, color: COLORS.text },
+  closeBtn: { backgroundColor: COLORS.el, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.sm, width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  closeBtnText: { color: COLORS.soft, fontSize: 16 },
+  label: { fontSize: 11, color: COLORS.soft, fontFamily: FONTS.semiBold, letterSpacing: 1, marginBottom: 6, marginTop: 12 },
+  input: { backgroundColor: COLORS.el, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, padding: 12, color: COLORS.text, fontSize: 14, fontFamily: FONTS.regular },
+  row2: { flexDirection: 'row' },
+  pickerWrap: { backgroundColor: COLORS.el, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, overflow: 'hidden', marginBottom: 4 },
+  picker: { color: COLORS.text, height: 50 },
+  saveBtn: { backgroundColor: COLORS.gold, borderRadius: RADIUS.md, padding: 14, alignItems: 'center', marginTop: 20, marginBottom: 32 },
+  saveBtnText: { color: COLORS.bg, fontFamily: FONTS.bold, fontSize: 15 },
+  ocrInfo: { backgroundColor: 'rgba(139,92,246,0.1)', borderWidth: 1, borderColor: 'rgba(139,92,246,0.3)', borderRadius: RADIUS.md, padding: 14, marginBottom: 16, alignItems: 'center' },
+  ocrInfoTitle: { fontSize: 13, color: COLORS.purple, fontFamily: FONTS.semiBold },
+  ocrInfoSub: { fontSize: 11, color: COLORS.muted, fontFamily: FONTS.regular, marginTop: 4, textAlign: 'center' },
+  ocrBtn: { backgroundColor: COLORS.purple, borderRadius: RADIUS.md, padding: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', marginBottom: 16 },
+  ocrBtnText: { color: '#fff', fontFamily: FONTS.bold, fontSize: 14 },
+  ocrBadge: { backgroundColor: 'rgba(39,174,96,0.1)', borderWidth: 1, borderColor: 'rgba(39,174,96,0.3)', borderRadius: RADIUS.md, padding: 10, marginBottom: 14 },
+  ocrBadgeText: { color: COLORS.green, fontSize: 13, fontFamily: FONTS.semiBold, textAlign: 'center' },
 });

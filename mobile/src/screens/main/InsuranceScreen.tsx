@@ -97,7 +97,7 @@ export default function InsuranceScreen() {
                 <TouchableOpacity style={s.actionBtn} onPress={()=>toggleStatus(p)}>
                   <Text style={s.actionTxt}>{p.status==='Active'?'Mark Lapsed':'Mark Active'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[s.actionBtn,{borderColor:'rgba(224,82,82,0.3)'}]} onPress={()=>Alert.alert('Remove Policy?','',[{text:'Cancel',style:'cancel'},{text:'Remove',style:'destructive',onPress:async()=>{await api.del(`/insurance/${p.id}`);load();}}])}>
+                <TouchableOpacity style={[s.actionBtn,{borderColor:'rgba(224,82,82,0.3)'}]} onPress={()=>Alert.alert('Remove Policy?','',[{text:'Cancel',style:'cancel'},{text:'Remove',style:'destructive',onPress:async()=>{await api.delete(`/insurance/${p.id}`);load();}}])}>
                   <Text style={[s.actionTxt,{color:COLORS.red}]}>Remove</Text>
                 </TouchableOpacity>
               </View>
