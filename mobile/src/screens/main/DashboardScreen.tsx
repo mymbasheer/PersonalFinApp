@@ -5,13 +5,16 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../services/api';
 import { calcAPIT } from '../../utils/tax';
-import { COLORS, FONTS, SPACING, RADIUS, EXPENSE_CATEGORIES } from '../../utils/constants';
+import { FONTS, SPACING, RADIUS, EXPENSE_CATEGORIES } from '../../utils/constants';
+import { useThemeStore } from '../../store/themeStore';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-LK');
 const fmtK = (n: number) => Math.abs(n) >= 1e6 ? `${(n / 1e6).toFixed(2)}M` : Math.abs(n) >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : `${Math.round(n)}`;
 const today = () => new Date().toISOString().slice(0, 7); // YYYY-MM
 
 export default function DashboardScreen() {
+  const { colors } = useThemeStore();
+  const styles = getStyles(colors);
   const nav = useNavigation<any>();
   const { user } = useAuthStore();
   const [data, setData] = useState<any>(null);
@@ -35,7 +38,9 @@ export default function DashboardScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const onRefresh = () => { setRefreshing(true); load(); };
+  const onRefresh = () => {
+  const { colors } = useThemeStore();
+  const styles = getStyles(colors); setRefreshing(true); load(); };
 
   const gross = user?.monthly_gross || 0;
   const annual = gross * 12;
@@ -62,23 +67,23 @@ export default function DashboardScreen() {
   ];
 
   if (loading) return (
-    <View style={styles.loadWrap}><ActivityIndicator size="large" color={COLORS.gold} /></View>
+    <View style={styles.loadWrap}><ActivityIndicator size="large" color={colors.gold} /></View>
   );
 
   return (
     <ScrollView
       style={styles.root}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
     >
       {/* ── Hero ── */}
       <View style={styles.hero}>
-        <Text style={styles.heroGreet}>Good day, <Text style={{ color: COLORS.gold }}>{user?.first_name} 👋</Text></Text>
+        <Text style={styles.heroGreet}>Good day, <Text style={{ color: colors.gold }}>{user?.first_name} 👋</Text></Text>
         <Text style={styles.heroSub}>{user?.occupation} · {user?.district}</Text>
         <View style={styles.heroStats}>
           {[
-            ['GROSS', `LKR ${fmtK(gross)}`, COLORS.text],
-            ['NET/MO', `LKR ${fmtK(net)}`, COLORS.teal],
-            ['APIT/MO', `LKR ${fmtK(tax)}`, COLORS.orange],
+            ['GROSS', `LKR ${fmtK(gross)}`, colors.text],
+            ['NET/MO', `LKR ${fmtK(net)}`, colors.teal],
+            ['APIT/MO', `LKR ${fmtK(tax)}`, colors.orange],
           ].map(([l, v, col]) => (
             <View key={l as string} style={styles.heroStat}>
               <Text style={styles.heroStatL}>{l as string}</Text>
@@ -99,12 +104,12 @@ export default function DashboardScreen() {
       <View style={styles.statGrid}>
         <TouchableOpacity style={styles.statCard} onPress={() => nav.navigate('Expenses')}>
           <Text style={styles.statLabel}>SPENT THIS MONTH</Text>
-          <Text style={[styles.statVal, { color: COLORS.teal }]}>LKR {fmtK(spent)}</Text>
+          <Text style={[styles.statVal, { color: colors.teal }]}>LKR {fmtK(spent)}</Text>
           <Text style={styles.statSub}>of LKR {fmtK(gross * 0.6)} est. budget</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.statCard} onPress={() => nav.navigate('Reminders')}>
           <Text style={styles.statLabel}>REMINDERS</Text>
-          <Text style={[styles.statVal, { color: COLORS.orange }]}>View all</Text>
+          <Text style={[styles.statVal, { color: colors.orange }]}>View all</Text>
           <Text style={styles.statSub}>Tap to check due dates</Text>
         </TouchableOpacity>
       </View>
@@ -131,7 +136,7 @@ export default function DashboardScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>RECENT TRANSACTIONS</Text>
           <TouchableOpacity onPress={() => nav.navigate('Expenses')}>
-            <Text style={{ color: COLORS.gold, fontSize: 12, fontFamily: FONTS.semiBold }}>View all →</Text>
+            <Text style={{ color: colors.gold, fontSize: 12, fontFamily: FONTS.semiBold }}>View all →</Text>
           </TouchableOpacity>
         </View>
         {(data?.byCat || []).slice(0, 5).map((item: any) => {
@@ -143,7 +148,7 @@ export default function DashboardScreen() {
                 <Text style={styles.txnLabel}>{cat.label}</Text>
                 <Text style={styles.txnSub}>This month</Text>
               </View>
-              <Text style={[styles.txnAmt, { color: COLORS.red }]}>−LKR {fmt(item.total)}</Text>
+              <Text style={[styles.txnAmt, { color: colors.red }]}>−LKR {fmt(item.total)}</Text>
             </View>
           );
         })}
@@ -158,38 +163,37 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.bg },
-  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.bg },
+const getStyles = (colors: any) => StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg },
+  loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
   hero: { backgroundColor: '#0D2040', margin: SPACING.xl, borderRadius: RADIUS.xl, padding: SPACING.xl, borderWidth: 1, borderColor: '#1F3555' },
-  heroGreet: { fontFamily: FONTS.display, fontSize: 24, color: COLORS.text, marginBottom: 4 },
-  heroSub: { fontFamily: FONTS.regular, fontSize: 13, color: COLORS.soft, marginBottom: 16 },
+  heroGreet: { fontFamily: FONTS.display, fontSize: 24, color: colors.text, marginBottom: 4 },
+  heroSub: { fontFamily: FONTS.regular, fontSize: 13, color: colors.soft, marginBottom: 16 },
   heroStats: { flexDirection: 'row', gap: 20 },
   heroStat: {},
-  heroStatL: { fontSize: 9, color: COLORS.muted, fontFamily: FONTS.semiBold, letterSpacing: 1 },
+  heroStatL: { fontSize: 9, color: colors.muted, fontFamily: FONTS.semiBold, letterSpacing: 1 },
   heroStatV: { fontFamily: FONTS.mono, fontSize: 15, fontWeight: '700', marginTop: 3 },
-  marketBar: { flexDirection: 'row', alignItems: 'center', marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: COLORS.border },
-  marketItem: { fontSize: 12, color: COLORS.soft, fontFamily: FONTS.mono },
-  marketDivider: { color: COLORS.muted, marginHorizontal: 10 },
-  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: COLORS.green, marginLeft: 8 },
+  marketBar: { flexDirection: 'row', alignItems: 'center', marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border },
+  marketItem: { fontSize: 12, color: colors.soft, fontFamily: FONTS.mono },
+  marketDivider: { color: colors.muted, marginHorizontal: 10 },
+  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.green, marginLeft: 8 },
   statGrid: { flexDirection: 'row', gap: 12, marginHorizontal: SPACING.xl, marginBottom: SPACING.lg },
-  statCard: { flex: 1, backgroundColor: COLORS.card, borderRadius: RADIUS.lg, padding: SPACING.lg, borderWidth: 1, borderColor: COLORS.border },
-  statLabel: { fontSize: 9, color: COLORS.muted, fontFamily: FONTS.bold, letterSpacing: 1 },
+  statCard: { flex: 1, backgroundColor: colors.card, borderRadius: RADIUS.lg, padding: SPACING.lg, borderWidth: 1, borderColor: colors.border },
+  statLabel: { fontSize: 9, color: colors.muted, fontFamily: FONTS.bold, letterSpacing: 1 },
   statVal: { fontFamily: FONTS.mono, fontSize: 17, fontWeight: '700', marginVertical: 5 },
-  statSub: { fontSize: 11, color: COLORS.soft, fontFamily: FONTS.regular },
-  section: { backgroundColor: COLORS.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.lg, borderWidth: 1, borderColor: COLORS.border },
+  statSub: { fontSize: 11, color: colors.soft, fontFamily: FONTS.regular },
+  section: { backgroundColor: colors.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.lg, borderWidth: 1, borderColor: colors.border },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  sectionLabel: { fontSize: 11, color: COLORS.gold, fontFamily: FONTS.bold, letterSpacing: 1.5, marginBottom: 14 },
+  sectionLabel: { fontSize: 11, color: colors.gold, fontFamily: FONTS.bold, letterSpacing: 1.5, marginBottom: 14 },
   qaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  qaBtn: { width: '22%', backgroundColor: COLORS.el, borderRadius: RADIUS.md, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  qaBtn: { width: '22%', backgroundColor: colors.el, borderRadius: RADIUS.md, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   qaIcon: { fontSize: 20, marginBottom: 4 },
-  qaLabel: { fontSize: 10, color: COLORS.soft, fontFamily: FONTS.medium, textAlign: 'center' },
-  txnRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.el, borderRadius: RADIUS.md, padding: 12, marginBottom: 6, borderLeftWidth: 3 },
+  qaLabel: { fontSize: 10, color: colors.soft, fontFamily: FONTS.medium, textAlign: 'center' },
+  txnRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.el, borderRadius: RADIUS.md, padding: 12, marginBottom: 6, borderLeftWidth: 3 },
   txnIcon: { fontSize: 18, marginRight: 12 },
-  txnLabel: { fontSize: 13, color: COLORS.text, fontFamily: FONTS.medium },
-  txnSub: { fontSize: 11, color: COLORS.soft, fontFamily: FONTS.regular, marginTop: 2 },
+  txnLabel: { fontSize: 13, color: colors.text, fontFamily: FONTS.medium },
+  txnSub: { fontSize: 11, color: colors.soft, fontFamily: FONTS.regular, marginTop: 2 },
   txnAmt: { fontFamily: FONTS.mono, fontSize: 13, fontWeight: '700' },
-  emptyText: { color: COLORS.muted, fontSize: 13, textAlign: 'center', padding: 16, fontFamily: FONTS.regular },
-  footer: { textAlign: 'center', color: COLORS.muted, fontSize: 10, fontFamily: FONTS.regular, padding: SPACING.xl },
-  orange: { color: COLORS.orange },
-});
+  emptyText: { color: colors.muted, fontSize: 13, textAlign: 'center', padding: 16, fontFamily: FONTS.regular },
+  footer: { textAlign: 'center', color: colors.muted, fontSize: 10, fontFamily: FONTS.regular, padding: SPACING.xl },
+  orange: { color: colors.orange } });

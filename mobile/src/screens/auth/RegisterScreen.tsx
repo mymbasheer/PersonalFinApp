@@ -7,7 +7,9 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { useAuthStore } from '../../store/authStore';
 import { calcAPIT } from '../../utils/tax';
-import { COLORS, FONTS, SPACING, RADIUS, DISTRICTS, OCCUPATIONS, EXPENSE_CATEGORIES } from '../../utils/constants';
+import { FONTS, SPACING, RADIUS, DISTRICTS, OCCUPATIONS, EXPENSE_CATEGORIES } from '../../utils/constants';
+import { darkColors as COLORS } from '../../theme/colors';
+
 
 const STEPS = ['Welcome', 'Personal', 'Income', 'Budgets', 'Security'];
 

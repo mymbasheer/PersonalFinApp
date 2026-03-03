@@ -1,121 +1,149 @@
 // mobile/src/services/api.ts
-import axios from 'axios';
-import { API_BASE } from '../utils/constants';
+// ─────────────────────────────────────────────────
+// Axios instance + all REST API namespaces.
+// Auth token is injected via a request interceptor.
+// Unauthorised (401) responses trigger a registered callback
+// (set by authStore) to avoid a circular dependency.
+// ─────────────────────────────────────────────────
 
-export const api = axios.create({
-  baseURL: API_BASE + '/api',
-  timeout: 15000,
+import axios, { AxiosInstance } from 'axios';
+import { API_BASE } from '../config';
+import type {
+  Transaction, Income, Goal, Debt, Asset, Insurance,
+  Reminder, NetWorthSummary, FxRate, GoldPrice, User,
+} from '../types';
+
+// ── Unauthorised callback ────────────────────────
+// authStore calls registerUnauthorizedHandler() on startup.
+// This breaks the circular dependency that previously used dynamic require().
+type UnauthorizedHandler = () => void;
+let onUnauthorized: UnauthorizedHandler = () => { };
+export const registerUnauthorizedHandler = (fn: UnauthorizedHandler) => {
+  onUnauthorized = fn;
+};
+
+// ── Token accessor ───────────────────────────────
+// authStore calls registerTokenAccessor() on startup.
+type TokenAccessor = () => string | null;
+let getToken: TokenAccessor = () => null;
+export const registerTokenAccessor = (fn: TokenAccessor) => {
+  getToken = fn;
+};
+
+// ── Axios instance ───────────────────────────────
+export const api: AxiosInstance = axios.create({
+  baseURL: `${API_BASE}/api`,
+  timeout: 15_000,
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Inject Bearer token on every request
+api.interceptors.request.use(config => {
+  const token = getToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Handle errors globally
 api.interceptors.response.use(
-  (r: any) => r,
-  (err: any) => {
-    const msg = err.response?.data?.error || err.message || 'Network error';
-    if (err.response?.status === 401) {
-      // Clear token and kick to login screen by getting the store directly
-      // Avoid circular dependency by using dynamic require or just clearing AsyncStorage
-      // and firing an event or directly calling getState
-      try {
-        // @ts-ignore
-        const { useAuthStore } = require('../store/authStore');
-        useAuthStore.getState().logout();
-      } catch (e) {
-        console.error('Failed to logout on 401', e);
-      }
-    }
+  r => r,
+  err => {
+    const msg = err.response?.data?.error ?? err.message ?? 'Network error';
+    if (err.response?.status === 401) onUnauthorized();
     return Promise.reject(new Error(msg));
-  }
+  },
 );
 
-// ── Auth
+// ── Auth ─────────────────────────────────────────
 export const authAPI = {
-  register: (d: any) => api.post('/auth/register', d),
-  login: (phone: string, password: string) => api.post('/auth/login', { phone, password }),
-  bioLogin: (phone: string) => api.post('/auth/biometric-login', { phone }),
+  register: (d: Record<string, unknown>) => api.post<{ token: string; user: User }>('/auth/register', d),
+  login: (phone: string, password: string) => api.post<{ token: string; user: User }>('/auth/login', { phone, password }),
+  bioLogin: (phone: string) => api.post<{ token: string; user: User }>('/auth/biometric-login', { phone }),
   bioReg: (credentialId: string) => api.post('/auth/biometric-register', { credentialId }),
-  me: () => api.get('/auth/me'),
+  me: () => api.get<{ user: User }>('/auth/me'),
 };
 
-// ── Transactions
+// ── Transactions ─────────────────────────────────
 export const txnAPI = {
-  list: (params?: any) => api.get('/transactions', { params }),
+  list: (params?: Record<string, unknown>) => api.get<Transaction[]>('/transactions', { params }),
   summary: (month: string) => api.get('/transactions/summary', { params: { month } }),
-  add: (d: any) => api.post('/transactions', d),
-  update: (id: number, d: any) => api.put(`/transactions/${id}`, d),
+  add: (d: Partial<Transaction>) => api.post<Transaction>('/transactions', d),
+  update: (id: number, d: Partial<Transaction>) => api.put<Transaction>(`/transactions/${id}`, d),
   delete: (id: number) => api.delete(`/transactions/${id}`),
 };
 
-// ── Income
+// ── Income ───────────────────────────────────────
 export const incomeAPI = {
-  list: () => api.get('/income'),
-  add: (d: any) => api.post('/income', d),
+  list: () => api.get<Income[]>('/income'),
+  add: (d: Partial<Income>) => api.post<Income>('/income', d),
   delete: (id: number) => api.delete(`/income/${id}`),
 };
 
-// ── Goals
+// ── Goals ────────────────────────────────────────
 export const goalsAPI = {
-  list: () => api.get('/goals'),
-  add: (d: any) => api.post('/goals', d),
-  deposit: (id: number, amount: number) => api.put(`/goals/${id}/deposit`, { amount }),
+  list: () => api.get<Goal[]>('/goals'),
+  add: (d: Partial<Goal>) => api.post<Goal>('/goals', d),
+  deposit: (id: number, amount: number) => api.put<Goal>(`/goals/${id}/deposit`, { amount }),
   delete: (id: number) => api.delete(`/goals/${id}`),
 };
 
-// ── Debts
+// ── Debts ────────────────────────────────────────
 export const debtsAPI = {
-  list: () => api.get('/debts'),
-  add: (d: any) => api.post('/debts', d),
+  list: () => api.get<Debt[]>('/debts'),
+  add: (d: Partial<Debt>) => api.post<Debt>('/debts', d),
   schedule: (id: number) => api.get(`/debts/${id}/schedule`),
   delete: (id: number) => api.delete(`/debts/${id}`),
 };
 
-// ── Assets / Net Worth
+// ── Assets / Net Worth ───────────────────────────
 export const assetsAPI = {
-  networth: () => api.get('/assets/networth'),
-  listAssets: () => api.get('/assets'),
-  addAsset: (d: any) => api.post('/assets', d),
-  updateAsset: (id: number, d: any) => api.put(`/assets/${id}`, d),
+  networth: () => api.get<NetWorthSummary>('/assets/networth'),
+  listAssets: () => api.get<Asset[]>('/assets'),
+  addAsset: (d: Partial<Asset>) => api.post<Asset>('/assets', d),
+  updateAsset: (id: number, d: Partial<Asset>) => api.put<Asset>(`/assets/${id}`, d),
   deleteAsset: (id: number) => api.delete(`/assets/${id}`),
 };
 
-// ── Insurance
+// ── Insurance ────────────────────────────────────
 export const insuranceAPI = {
-  list: () => api.get('/insurance'),
-  add: (d: any) => api.post('/insurance', d),
+  list: () => api.get<Insurance[]>('/insurance'),
+  add: (d: Partial<Insurance>) => api.post<Insurance>('/insurance', d),
   delete: (id: number) => api.delete(`/insurance/${id}`),
 };
 
-// ── Reminders
+// ── Reminders ────────────────────────────────────
 export const remindersAPI = {
-  list: () => api.get('/reminders'),
-  add: (d: any) => api.post('/reminders', d),
-  toggle: (id: number, enabled: boolean) => api.put(`/reminders/${id}`, { enabled }),
+  list: () => api.get<Reminder[]>('/reminders'),
+  add: (d: Partial<Reminder>) => api.post<Reminder>('/reminders', d),
+  toggle: (id: number, enabled: boolean) => api.put<Reminder>(`/reminders/${id}`, { enabled }),
   delete: (id: number) => api.delete(`/reminders/${id}`),
 };
 
-// ── Market
+// ── Market ───────────────────────────────────────
 export const marketAPI = {
-  fx: () => api.get('/market/fx'),
-  gold: () => api.get('/market/gold'),
+  fx: () => api.get<FxRate>('/market/fx'),
+  gold: () => api.get<GoldPrice>('/market/gold'),
 };
 
-// ── Reports
+// ── Reports ──────────────────────────────────────
 export const reportsAPI = {
   tax: () => api.get('/reports/tax'),
   networth: () => api.get('/reports/networth'),
   monthly: (month: string) => api.get('/reports/monthly', { params: { month } }),
 };
 
-// ── User
+// ── User ─────────────────────────────────────────
 export const userAPI = {
-  profile: () => api.get('/users/profile'),
-  updateProfile: (d: any) => api.put('/users/profile', d),
-  getBudgets: () => api.get('/users/budgets'),
-  setBudgets: (budgets: any) => api.put('/users/budgets', { budgets }),
+  profile: () => api.get<User>('/users/profile'),
+  updateProfile: (d: Partial<User>) => api.put<User>('/users/profile', d),
+  getBudgets: () => api.get<Record<string, number>>('/users/budgets'),
+  setBudgets: (budgets: Record<string, number>) => api.put('/users/budgets', { budgets }),
+  updatePassword: (d: { current: string; newPassword: string }) => api.put('/users/password', d),
   setPushToken: (token: string) => api.put('/users/push-token', { token }),
 };
 
-// ── Advisor
+// ── Advisor ──────────────────────────────────────
 export const advisorAPI = {
-  chat: (messages: any[]) => api.post('/advisor/chat', { messages }),
+  chat: (messages: Array<{ role: string; content: string }>) =>
+    api.post<{ reply: string }>('/advisor/chat', { messages }),
 };

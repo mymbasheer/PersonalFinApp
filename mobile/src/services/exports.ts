@@ -4,7 +4,8 @@ import RNFS from 'react-native-fs';
 import { Share } from 'react-native';
 import XLSX from 'xlsx';
 import { taxBreakdown } from '../utils/tax';
-import { fmt, today } from '../utils/tax';
+import { fmt, today } from '../utils/format';
+
 
 // ── PDF Export
 export async function exportTaxPDF(user: any) {

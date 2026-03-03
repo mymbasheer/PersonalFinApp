@@ -4,11 +4,14 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-nati
 import Slider from '@react-native-community/slider';
 import { useAuthStore } from '../../store/authStore';
 import { calcAPIT } from '../../utils/tax';
-import { COLORS, FONTS, SPACING, RADIUS, TAX_SLABS_2025 } from '../../utils/constants';
+import { FONTS, SPACING, RADIUS, TAX_SLABS_2025 } from '../../utils/constants';
+import { useThemeStore } from '../../store/themeStore';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-LK');
 
 export default function TaxScreen() {
+  const { colors } = useThemeStore();
+  const styles = getStyles(colors);
   const { user } = useAuthStore();
   const [monthly, setMonthly] = useState(user?.monthly_gross || 150000);
   const [tab, setTab] = useState<'calc' | 'guide'>('calc');
@@ -51,18 +54,18 @@ export default function TaxScreen() {
             style={{ height: 40 }}
             minimumValue={50000} maximumValue={800000} step={5000}
             value={monthly} onValueChange={setMonthly}
-            minimumTrackTintColor={COLORS.gold}
-            maximumTrackTintColor={COLORS.border}
-            thumbTintColor={COLORS.gold}
+            minimumTrackTintColor={colors.gold}
+            maximumTrackTintColor={colors.border}
+            thumbTintColor={colors.gold}
           />
           <View style={styles.grid3}>
             {[
-              ['Monthly APIT', fmt(tax / 12), COLORS.red],
-              ['Annual APIT',  fmt(tax),       COLORS.orange],
-              ['Eff. Rate',    eff.toFixed(1) + '%', COLORS.gold],
-              ['EPF (8%)',     fmt(monthly * .08), COLORS.purple],
-              ['Net/month',    fmt(monthly - tax/12 - monthly * .08), COLORS.teal],
-              ['Annual Net',   fmt((monthly - tax/12 - monthly*.08)*12), COLORS.green],
+              ['Monthly APIT', fmt(tax / 12), colors.red],
+              ['Annual APIT',  fmt(tax),       colors.orange],
+              ['Eff. Rate',    eff.toFixed(1) + '%', colors.gold],
+              ['EPF (8%)',     fmt(monthly * .08), colors.purple],
+              ['Net/month',    fmt(monthly - tax/12 - monthly * .08), colors.teal],
+              ['Annual Net',   fmt((monthly - tax/12 - monthly*.08)*12), colors.green],
             ].map(([l, v, c]) => (
               <View key={l as string} style={styles.miniCard}>
                 <Text style={styles.miniLabel}>{l as string}</Text>
@@ -79,7 +82,7 @@ export default function TaxScreen() {
                 <Text style={styles.slabRange}>LKR {fmt(s.from)} – {s.to === Infinity ? 'Above' : fmt(s.to)}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   {cur && <View style={styles.youBadge}><Text style={styles.youText}>YOU</Text></View>}
-                  <Text style={[styles.slabRate, { color: s.rate === 0 ? COLORS.teal : cur ? COLORS.gold : COLORS.soft }]}>{s.rate}%</Text>
+                  <Text style={[styles.slabRate, { color: s.rate === 0 ? colors.teal : cur ? colors.gold : colors.soft }]}>{s.rate}%</Text>
                 </View>
               </View>
             );
@@ -114,7 +117,7 @@ export default function TaxScreen() {
           <View style={styles.pbarWrap}>
             <View style={[styles.pbarFill, {
               width: `${(done / IRD_ITEMS.length) * 100}%`,
-              backgroundColor: done === IRD_ITEMS.length ? COLORS.green : COLORS.gold
+              backgroundColor: done === IRD_ITEMS.length ? colors.green : colors.gold
             }]} />
           </View>
 
@@ -149,46 +152,45 @@ export default function TaxScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root:          { flex: 1, backgroundColor: COLORS.bg },
-  title:         { fontFamily: FONTS.display, fontSize: 28, color: COLORS.text, padding: SPACING.xl, paddingBottom: 4 },
-  sub:           { fontSize: 13, color: COLORS.soft, fontFamily: FONTS.regular, paddingHorizontal: SPACING.xl, marginBottom: 16 },
-  tabBar:        { flexDirection: 'row', gap: 4, marginHorizontal: SPACING.xl, marginBottom: 16, backgroundColor: COLORS.card, borderRadius: RADIUS.lg, padding: 8, borderWidth: 1, borderColor: COLORS.border },
+const getStyles = (colors: any) => StyleSheet.create({
+  root:          { flex: 1, backgroundColor: colors.bg },
+  title:         { fontFamily: FONTS.display, fontSize: 28, color: colors.text, padding: SPACING.xl, paddingBottom: 4 },
+  sub:           { fontSize: 13, color: colors.soft, fontFamily: FONTS.regular, paddingHorizontal: SPACING.xl, marginBottom: 16 },
+  tabBar:        { flexDirection: 'row', gap: 4, marginHorizontal: SPACING.xl, marginBottom: 16, backgroundColor: colors.card, borderRadius: RADIUS.lg, padding: 8, borderWidth: 1, borderColor: colors.border },
   tabBtn:        { flex: 1, padding: 9, borderRadius: RADIUS.md, alignItems: 'center' },
-  tabActive:     { backgroundColor: COLORS.gold },
-  tabText:       { fontSize: 12, color: COLORS.soft, fontFamily: FONTS.medium },
-  tabTextActive: { color: COLORS.bg, fontFamily: FONTS.bold },
-  card:          { backgroundColor: COLORS.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.xl, padding: SPACING.xl, borderWidth: 1, borderColor: COLORS.border, marginBottom: SPACING.xl },
-  cardLabel:     { fontSize: 11, color: COLORS.muted, fontFamily: FONTS.bold, letterSpacing: 1.5, marginBottom: 4 },
-  cardTitle:     { fontFamily: FONTS.display, fontSize: 18, color: COLORS.text },
-  bigNum:        { fontFamily: FONTS.mono, fontSize: 34, fontWeight: '800', color: COLORS.gold },
-  annualLine:    { fontSize: 12, color: COLORS.soft, fontFamily: FONTS.regular, marginBottom: 8 },
+  tabActive:     { backgroundColor: colors.gold },
+  tabText:       { fontSize: 12, color: colors.soft, fontFamily: FONTS.medium },
+  tabTextActive: { color: colors.bg, fontFamily: FONTS.bold },
+  card:          { backgroundColor: colors.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.xl, padding: SPACING.xl, borderWidth: 1, borderColor: colors.border, marginBottom: SPACING.xl },
+  cardLabel:     { fontSize: 11, color: colors.muted, fontFamily: FONTS.bold, letterSpacing: 1.5, marginBottom: 4 },
+  cardTitle:     { fontFamily: FONTS.display, fontSize: 18, color: colors.text },
+  bigNum:        { fontFamily: FONTS.mono, fontSize: 34, fontWeight: '800', color: colors.gold },
+  annualLine:    { fontSize: 12, color: colors.soft, fontFamily: FONTS.regular, marginBottom: 8 },
   grid3:         { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
-  miniCard:      { flex: 1, minWidth: 100, backgroundColor: COLORS.el, borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: COLORS.border },
-  miniLabel:     { fontSize: 10, color: COLORS.muted, fontFamily: FONTS.semiBold },
+  miniCard:      { flex: 1, minWidth: 100, backgroundColor: colors.el, borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: colors.border },
+  miniLabel:     { fontSize: 10, color: colors.muted, fontFamily: FONTS.semiBold },
   miniVal:       { fontFamily: FONTS.mono, fontSize: 15, fontWeight: '700', marginTop: 4 },
-  slabHeader:    { fontSize: 11, color: COLORS.gold, fontFamily: FONTS.bold, letterSpacing: 1.5, marginTop: 18, marginBottom: 10 },
-  slabRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.el, borderRadius: RADIUS.sm, padding: 11, marginBottom: 5, borderWidth: 1, borderColor: COLORS.border },
+  slabHeader:    { fontSize: 11, color: colors.gold, fontFamily: FONTS.bold, letterSpacing: 1.5, marginTop: 18, marginBottom: 10 },
+  slabRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.el, borderRadius: RADIUS.sm, padding: 11, marginBottom: 5, borderWidth: 1, borderColor: colors.border },
   slabActive:    { borderColor: 'rgba(212,168,67,0.6)', backgroundColor: 'rgba(212,168,67,0.1)' },
-  slabRange:     { fontSize: 12, color: COLORS.soft, fontFamily: FONTS.mono },
+  slabRange:     { fontSize: 12, color: colors.soft, fontFamily: FONTS.mono },
   slabRate:      { fontFamily: FONTS.mono, fontSize: 14, fontWeight: '700' },
-  youBadge:      { backgroundColor: COLORS.gold, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
-  youText:       { fontSize: 9, color: COLORS.bg, fontFamily: FONTS.bold },
+  youBadge:      { backgroundColor: colors.gold, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
+  youText:       { fontSize: 9, color: colors.bg, fontFamily: FONTS.bold },
   changesGrid:   {},
-  changeRow:     { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: COLORS.el, borderRadius: RADIUS.sm, padding: 10, marginBottom: 5, borderWidth: 1, borderColor: COLORS.border },
-  changeKey:     { fontSize: 12, color: COLORS.soft, fontFamily: FONTS.medium, flex: 1 },
-  changeVal:     { fontSize: 12, color: COLORS.text, fontFamily: FONTS.semiBold, flex: 1, textAlign: 'right' },
+  changeRow:     { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.el, borderRadius: RADIUS.sm, padding: 10, marginBottom: 5, borderWidth: 1, borderColor: colors.border },
+  changeKey:     { fontSize: 12, color: colors.soft, fontFamily: FONTS.medium, flex: 1 },
+  changeVal:     { fontSize: 12, color: colors.text, fontFamily: FONTS.semiBold, flex: 1, textAlign: 'right' },
   guideHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
-  guideSubtitle: { fontSize: 12, color: COLORS.soft, fontFamily: FONTS.regular, marginTop: 2 },
-  pbarWrap:      { height: 6, backgroundColor: COLORS.border, borderRadius: 6, overflow: 'hidden', marginBottom: 16 },
+  guideSubtitle: { fontSize: 12, color: colors.soft, fontFamily: FONTS.regular, marginTop: 2 },
+  pbarWrap:      { height: 6, backgroundColor: colors.border, borderRadius: 6, overflow: 'hidden', marginBottom: 16 },
   pbarFill:      { height: '100%', borderRadius: 6 },
-  checkRow:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: COLORS.el, borderRadius: RADIUS.md, padding: 13, marginBottom: 8, borderWidth: 1, borderColor: COLORS.border, gap: 12 },
+  checkRow:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: colors.el, borderRadius: RADIUS.md, padding: 13, marginBottom: 8, borderWidth: 1, borderColor: colors.border, gap: 12 },
   checkRowDone:  { borderColor: 'rgba(39,174,96,0.4)', backgroundColor: 'rgba(39,174,96,0.06)' },
-  checkbox:      { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  checkboxDone:  { backgroundColor: COLORS.green, borderColor: COLORS.green },
-  checkLabel:    { fontSize: 13, color: COLORS.text, fontFamily: FONTS.semiBold },
-  checkSub:      { fontSize: 11, color: COLORS.muted, fontFamily: FONTS.regular, marginTop: 2 },
+  checkbox:      { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  checkboxDone:  { backgroundColor: colors.green, borderColor: colors.green },
+  checkLabel:    { fontSize: 13, color: colors.text, fontFamily: FONTS.semiBold },
+  checkSub:      { fontSize: 11, color: colors.muted, fontFamily: FONTS.regular, marginTop: 2 },
   warnBox:       { backgroundColor: 'rgba(240,100,30,0.08)', borderWidth: 1, borderColor: 'rgba(240,100,30,0.3)', borderRadius: RADIUS.md, padding: 14, marginTop: 14 },
-  warnTitle:     { color: COLORS.orange, fontSize: 13, fontFamily: FONTS.bold, marginBottom: 8 },
-  warnText:      { color: COLORS.soft, fontSize: 12, fontFamily: FONTS.regular, lineHeight: 20 },
-});
+  warnTitle:     { color: colors.orange, fontSize: 13, fontFamily: FONTS.bold, marginBottom: 8 },
+  warnText:      { color: colors.soft, fontSize: 12, fontFamily: FONTS.regular, lineHeight: 20 } });

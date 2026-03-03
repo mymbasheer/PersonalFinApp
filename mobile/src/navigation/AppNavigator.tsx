@@ -1,67 +1,43 @@
 // mobile/src/navigation/AppNavigator.tsx
-import React from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useAuthStore } from '../store/authStore';
-import { COLORS } from '../utils/constants';
+// ─────────────────────────────────────────────────
+// Root stack navigator: Auth flow ↔ Main app.
+// Uses typed RootStackParamList for type-safe navigation.
+// ─────────────────────────────────────────────────
 
-// Auth Screens
+import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
+
+// Auth
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 
-// Main Screens
-import DashboardScreen from '../screens/main/DashboardScreen';
-import ExpensesScreen from '../screens/main/ExpensesScreen';
-import IncomeScreen from '../screens/main/IncomeScreen';
+// Main tabs + detail screens
+import { MainTabs } from './MainTabs';
 import NetWorthScreen from '../screens/main/NetWorthScreen';
 import TaxScreen from '../screens/main/TaxScreen';
 import GoalsScreen from '../screens/main/GoalsScreen';
 import DebtsScreen from '../screens/main/DebtsScreen';
 import InsuranceScreen from '../screens/main/InsuranceScreen';
-import ToolsScreen from '../screens/main/ToolsScreen';
 import ReportsScreen from '../screens/main/ReportsScreen';
 import RemindersScreen from '../screens/main/RemindersScreen';
-import AdvisorScreen from '../screens/main/AdvisorScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
 
-const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
+import type { RootStackParamList } from '../types';
 
-const TAB_ICON: Record<string, string> = {
-  Dashboard: '⬡', Expenses: '▼', Income: '▲', 'LK Tools': '🇱🇰', Advisor: '✦',
-};
-
-function MainTabs() {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarStyle: { backgroundColor: COLORS.card, borderTopColor: COLORS.border, height: 60 },
-        tabBarActiveTintColor: COLORS.gold,
-        tabBarInactiveTintColor: COLORS.muted,
-        tabBarLabelStyle: { fontSize: 10, marginBottom: 4 },
-        tabBarIcon: ({ color }) => (
-          <Text style={{ color, fontSize: 18, marginBottom: 2 }}>{TAB_ICON[route.name] || '•'}</Text>
-        ),
-      })}
-    >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Expenses" component={ExpensesScreen} />
-      <Tab.Screen name="Income" component={IncomeScreen} />
-      <Tab.Screen name="LK Tools" component={ToolsScreen} />
-      <Tab.Screen name="Advisor" component={AdvisorScreen} />
-    </Tab.Navigator>
-  );
-}
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function AppNavigator() {
-  const { user, isLoading } = useAuthStore();
+  const isLoading = useAuthStore(state => state.isLoading);
+  const user = useAuthStore(state => state.user);
+  const colors = useThemeStore(state => state.colors);
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.bg }}>
-        <ActivityIndicator size="large" color={COLORS.gold} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator size="large" color={colors.gold} />
       </View>
     );
   }

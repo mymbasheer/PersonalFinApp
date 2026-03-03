@@ -4,9 +4,12 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIn
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../services/api';
 import { exportService } from '../../services/exports';
-import { COLORS, FONTS, SPACING, RADIUS } from '../../utils/constants';
+import { FONTS, SPACING, RADIUS } from '../../utils/constants';
+import { useThemeStore } from '../../store/themeStore';
 
 export default function ReportsScreen() {
+  const { colors } = useThemeStore();
+  const s = getStyles(colors);
   const { user } = useAuthStore();
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -19,7 +22,7 @@ export default function ReportsScreen() {
 
   const reports = [
     {
-      id: 'monthly_pdf', icon: '📄', color: COLORS.red, title: 'Monthly Summary PDF',
+      id: 'monthly_pdf', icon: '📄', color: colors.red, title: 'Monthly Summary PDF',
       sub: 'Income, expenses, APIT, EPF — professional formatted report',
       badge: 'PDF',
       action: async () => {
@@ -28,25 +31,22 @@ export default function ReportsScreen() {
           api.get('/budgets').then(r => r.data || {}).catch(() => ({})),
         ]);
         await exportService.monthlyPDF(user, { byCat: [], totalExpense: 0, totalIncome: 0 });
-      },
-    },
+      } },
     {
-      id: 'tax_pdf', icon: '◎', color: COLORS.orange, title: 'Annual Tax Report PDF',
+      id: 'tax_pdf', icon: '◎', color: colors.orange, title: 'Annual Tax Report PDF',
       sub: 'IRD 2025 APIT calculation, slabs, EPF/ETF, WHT, CGT',
       badge: 'PDF',
-      action: () => exportService.taxPDF(user),
-    },
+      action: () => exportService.taxPDF(user) },
     {
-      id: 'txn_excel', icon: '📊', color: COLORS.green, title: 'Transactions Excel',
+      id: 'txn_excel', icon: '📊', color: colors.green, title: 'Transactions Excel',
       sub: 'Full transaction history with category, method, notes',
       badge: 'XLSX',
       action: async () => {
         const txns = await api.get('/transactions?limit=1000').then(r => r.data.transactions || []);
         await exportService.transactionsXLS(user, txns);
-      },
-    },
+      } },
     {
-      id: 'budget_excel', icon: '📈', color: COLORS.blue, title: 'Budget vs Actual Excel',
+      id: 'budget_excel', icon: '📈', color: colors.blue, title: 'Budget vs Actual Excel',
       sub: 'Category-wise budget analysis with variance and status',
       badge: 'XLSX',
       action: async () => {
@@ -55,20 +55,18 @@ export default function ReportsScreen() {
           api.get('/budgets').then(r => r.data || {}).catch(() => ({})),
         ]);
         await exportService.budgetXLS(user, txns, budgets);
-      },
-    },
+      } },
     {
-      id: 'loans_excel', icon: '🏦', color: COLORS.purple, title: 'Loan Amortisation Excel',
+      id: 'loans_excel', icon: '🏦', color: colors.purple, title: 'Loan Amortisation Excel',
       sub: 'Full repayment schedule for all tracked loans',
       badge: 'XLSX',
       action: async () => {
         const debts = await api.get('/debts').then(r => r.data.debts || []);
         if (!debts.length) { Alert.alert('No loans', 'Add loans in the Debts section first.'); return; }
         await exportService.loansXLS(debts);
-      },
-    },
+      } },
     {
-      id: 'networth_pdf', icon: '💎', color: COLORS.gold, title: 'Net Worth Statement PDF',
+      id: 'networth_pdf', icon: '💎', color: colors.gold, title: 'Net Worth Statement PDF',
       sub: 'Assets, liabilities, net worth snapshot',
       badge: 'PDF',
       action: async () => {
@@ -77,8 +75,7 @@ export default function ReportsScreen() {
           api.get('/liabilities').then(r => r.data.liabilities || []),
         ]);
         await exportService.networthPDF(user, assets, liabs);
-      },
-    },
+      } },
   ];
 
   return (
@@ -128,23 +125,22 @@ export default function ReportsScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.bg },
-  title: { fontFamily: FONTS.display, fontSize: 28, color: COLORS.text, padding: SPACING.xl, paddingBottom: 4 },
-  sub: { fontSize: 13, color: COLORS.soft, fontFamily: FONTS.regular, paddingHorizontal: SPACING.xl, marginBottom: 16 },
-  infoBox: { backgroundColor: COLORS.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.lg, padding: SPACING.lg, borderWidth: 1, borderColor: COLORS.border, marginBottom: SPACING.lg },
-  infoTitle: { fontSize: 12, color: COLORS.teal, fontFamily: FONTS.bold, marginBottom: 8 },
-  infoText: { fontSize: 12, color: COLORS.soft, fontFamily: FONTS.regular, lineHeight: 20 },
-  card: { backgroundColor: COLORS.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.lg, padding: SPACING.lg, borderWidth: 1, borderColor: COLORS.border, marginBottom: 10, borderLeftWidth: 4, flexDirection: 'row', alignItems: 'center' },
+const getStyles = (colors: any) => StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg },
+  title: { fontFamily: FONTS.display, fontSize: 28, color: colors.text, padding: SPACING.xl, paddingBottom: 4 },
+  sub: { fontSize: 13, color: colors.soft, fontFamily: FONTS.regular, paddingHorizontal: SPACING.xl, marginBottom: 16 },
+  infoBox: { backgroundColor: colors.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.lg, padding: SPACING.lg, borderWidth: 1, borderColor: colors.border, marginBottom: SPACING.lg },
+  infoTitle: { fontSize: 12, color: colors.teal, fontFamily: FONTS.bold, marginBottom: 8 },
+  infoText: { fontSize: 12, color: colors.soft, fontFamily: FONTS.regular, lineHeight: 20 },
+  card: { backgroundColor: colors.card, marginHorizontal: SPACING.xl, borderRadius: RADIUS.lg, padding: SPACING.lg, borderWidth: 1, borderColor: colors.border, marginBottom: 10, borderLeftWidth: 4, flexDirection: 'row', alignItems: 'center' },
   cardLeft: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   cardIcon: { fontSize: 26, marginTop: 2 },
   cardText: { flex: 1 },
-  cardTitle: { fontSize: 14, color: COLORS.text, fontFamily: FONTS.semiBold },
-  cardSub: { fontSize: 11, color: COLORS.soft, fontFamily: FONTS.regular, marginTop: 3, lineHeight: 16 },
+  cardTitle: { fontSize: 14, color: colors.text, fontFamily: FONTS.semiBold },
+  cardSub: { fontSize: 11, color: colors.soft, fontFamily: FONTS.regular, marginTop: 3, lineHeight: 16 },
   badge: { borderWidth: 1, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1 },
   badgeTxt: { fontSize: 9, fontFamily: FONTS.bold },
   exportBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
   exportBtnTxt: { color: '#fff', fontSize: 18, fontWeight: '700' },
   disclaimerBox: { backgroundColor: 'rgba(212,168,67,0.06)', borderWidth: 1, borderColor: 'rgba(212,168,67,0.2)', borderRadius: RADIUS.lg, margin: SPACING.xl, padding: SPACING.lg },
-  disclaimerTxt: { fontSize: 11, color: COLORS.muted, fontFamily: FONTS.regular, lineHeight: 18 },
-});
+  disclaimerTxt: { fontSize: 11, color: colors.muted, fontFamily: FONTS.regular, lineHeight: 18 } });

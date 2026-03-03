@@ -2,10 +2,12 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, ActivityIndicator, Switch, RefreshControl } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../../services/api';
 import { Notifications } from '../../services/notifications';
-import { COLORS, FONTS, SPACING, RADIUS } from '../../utils/constants';
+import { FONTS, SPACING, RADIUS } from '../../utils/constants';
+import { useThemeStore } from '../../store/themeStore';
 
 const fmt = (n: number) => Math.round(n || 0).toLocaleString('en-LK');
 const daysUntil = (d: string) => d ? Math.ceil((new Date(d).getTime() - Date.now()) / 86400000) : null;
@@ -14,11 +16,13 @@ const ICONS_MAP: Record<string, string> = { bill: '⚡', loan_emi: '🏦', insur
 const RECURRING = ['Monthly', 'Quarterly', 'Semi-Annual', 'Annual', 'One-time'];
 
 export default function RemindersScreen() {
+  const { colors } = useThemeStore();
+  const s = getStyles(colors);
   const [reminders, setReminders] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ title: '', reminderType: 'bill', dueDate: '', amount: '', recurring: 'Monthly', icon: '🔔', color: COLORS.gold });
+  const [form, setForm] = useState({ title: '', reminderType: 'bill', dueDate: '', amount: '', recurring: 'Monthly', icon: '🔔', color: colors.gold });
   const setF = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
   const load = useCallback(async () => {
@@ -48,23 +52,24 @@ export default function RemindersScreen() {
     today: reminders.filter(r => r.enabled && daysUntil(r.due_date) === 0),
     thisWeek: reminders.filter(r => r.enabled && (daysUntil(r.due_date) || 0) > 0 && (daysUntil(r.due_date) || 0) <= 7),
     upcoming: reminders.filter(r => r.enabled && (daysUntil(r.due_date) || 0) > 7),
-    disabled: reminders.filter(r => !r.enabled),
-  };
+    disabled: reminders.filter(r => !r.enabled) };
 
   const ReminderCard = ({ rem }: { rem: any }) => {
+  const { colors } = useThemeStore();
+  const s = getStyles(colors);
     const dl = daysUntil(rem.due_date);
     const isOverdue = (dl || 0) < 0, isToday = dl === 0, isUrgent = (dl || 0) <= 3 && (dl || 0) >= 0;
-    const statusColor = isOverdue ? COLORS.red : isToday ? COLORS.red : isUrgent ? COLORS.orange : COLORS.green;
+    const statusColor = isOverdue ? colors.red : isToday ? colors.red : isUrgent ? colors.orange : colors.green;
     const statusText = isOverdue ? `${Math.abs(dl || 0)}d overdue` : isToday ? 'DUE TODAY' : isUrgent ? `Due in ${dl}d` : `Due in ${dl}d`;
     return (
-      <View style={[s.remCard, { borderLeftColor: rem.color || COLORS.gold }]}>
+      <View style={[s.remCard, { borderLeftColor: rem.color || colors.gold }]}>
         <View style={s.remTop}>
           <Text style={{ fontSize: 22, marginRight: 12 }}>{rem.icon || '🔔'}</Text>
           <View style={{ flex: 1 }}>
             <Text style={s.remTitle}>{rem.title}</Text>
             <Text style={s.remDate}>{rem.due_date} · {rem.recurring}</Text>
           </View>
-          <Switch value={!!rem.enabled} onValueChange={() => toggle(rem)} trackColor={{ false: COLORS.border, true: COLORS.gold + '60' }} thumbColor={rem.enabled ? COLORS.gold : COLORS.muted} />
+          <Switch value={!!rem.enabled} onValueChange={() => toggle(rem)} trackColor={{ false: colors.border, true: colors.gold + '60' }} thumbColor={rem.enabled ? colors.gold : colors.muted} />
         </View>
         <View style={s.remBottom}>
           {rem.amount > 0 && <Text style={s.remAmt}>LKR {fmt(rem.amount)}</Text>}
@@ -87,18 +92,18 @@ export default function RemindersScreen() {
   ) : null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.bg }}>
-      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={COLORS.gold} />}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.gold} />}>
         <View style={s.header}>
           <Text style={s.title}>Reminders</Text>
           <TouchableOpacity style={s.addBtn} onPress={() => setShowAdd(true)}><Text style={s.addBtnTxt}>+  Add</Text></TouchableOpacity>
         </View>
         <View style={s.container}>
-          <Group title="⚠ OVERDUE" items={grouped.overdue} color={COLORS.red} />
-          <Group title="🔴 DUE TODAY" items={grouped.today} color={COLORS.red} />
-          <Group title="🟡 THIS WEEK" items={grouped.thisWeek} color={COLORS.orange} />
-          <Group title="🟢 UPCOMING" items={grouped.upcoming} color={COLORS.green} />
-          <Group title="⚫ DISABLED" items={grouped.disabled} color={COLORS.muted} />
+          <Group title="⚠ OVERDUE" items={grouped.overdue} color={colors.red} />
+          <Group title="🔴 DUE TODAY" items={grouped.today} color={colors.red} />
+          <Group title="🟡 THIS WEEK" items={grouped.thisWeek} color={colors.orange} />
+          <Group title="🟢 UPCOMING" items={grouped.upcoming} color={colors.green} />
+          <Group title="⚫ DISABLED" items={grouped.disabled} color={colors.muted} />
           {!reminders.length && (
             <View style={s.emptyCard}>
               <Text style={{ fontSize: 32, textAlign: 'center', marginBottom: 8 }}>🔔</Text>
@@ -113,27 +118,27 @@ export default function RemindersScreen() {
         <View style={s.modal}>
           <View style={s.modalHdr}>
             <Text style={s.modalTitle}>Add Reminder</Text>
-            <TouchableOpacity onPress={() => setShowAdd(false)} style={s.closeBtn}><Text style={{ color: COLORS.soft, fontSize: 16 }}>✕</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowAdd(false)} style={s.closeBtn}><Text style={{ color: colors.soft, fontSize: 16 }}>✕</Text></TouchableOpacity>
           </View>
           <ScrollView keyboardShouldPersistTaps="handled">
             <Text style={s.lbl}>REMINDER TYPE</Text>
-            <View style={s.pickerWrap}><Picker selectedValue={form.reminderType} onValueChange={(v: any) => setF('reminderType', v)} style={s.picker} dropdownIconColor={COLORS.soft}>{REM_TYPES.map(t => <Picker.Item key={t} label={`${ICONS_MAP[t] || '🔔'}  ${t.replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}`} value={t} color={COLORS.text} />)}</Picker></View>
+            <View style={s.pickerWrap}><Picker selectedValue={form.reminderType} onValueChange={(v: any) => setF('reminderType', v)} style={s.picker} dropdownIconColor={colors.soft}>{REM_TYPES.map(t => <Picker.Item key={t} label={`${ICONS_MAP[t] || '🔔'}  ${t.replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}`} value={t} color={Platform.OS === 'android' ? '#000000' : colors.text} />)}</Picker></View>
             <Text style={s.lbl}>TITLE *</Text>
-            <TextInput style={s.inp} value={form.title} onChangeText={v => setF('title', v)} placeholder="e.g. CEB Electricity Bill" placeholderTextColor={COLORS.muted} />
+            <TextInput style={s.inp} value={form.title} onChangeText={v => setF('title', v)} placeholder="e.g. CEB Electricity Bill" placeholderTextColor={colors.muted} />
             <Text style={s.lbl}>DUE DATE (YYYY-MM-DD) *</Text>
-            <TextInput style={s.inp} value={form.dueDate} onChangeText={v => setF('dueDate', v)} placeholder="2026-04-15" placeholderTextColor={COLORS.muted} />
+            <TextInput style={s.inp} value={form.dueDate} onChangeText={v => setF('dueDate', v)} placeholder="2026-04-15" placeholderTextColor={colors.muted} />
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <View style={{ flex: 1 }}>
                 <Text style={s.lbl}>AMOUNT (LKR)</Text>
-                <TextInput style={[s.inp, { fontFamily: FONTS.mono }]} value={form.amount} onChangeText={v => setF('amount', v)} placeholder="0" placeholderTextColor={COLORS.muted} keyboardType="numeric" />
+                <TextInput style={[s.inp, { fontFamily: FONTS.mono }]} value={form.amount} onChangeText={v => setF('amount', v)} placeholder="0" placeholderTextColor={colors.muted} keyboardType="numeric" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.lbl}>RECURRING</Text>
-                <View style={s.pickerWrap}><Picker selectedValue={form.recurring} onValueChange={(v: any) => setF('recurring', v)} style={[s.picker, { height: 47 }]} dropdownIconColor={COLORS.soft}>{RECURRING.map(r => <Picker.Item key={r} label={r} value={r} color={COLORS.text} />)}</Picker></View>
+                <View style={s.pickerWrap}><Picker selectedValue={form.recurring} onValueChange={(v: any) => setF('recurring', v)} style={[s.picker, { height: 47 }]} dropdownIconColor={colors.soft}>{RECURRING.map(r => <Picker.Item key={r} label={r} value={r} color={Platform.OS === 'android' ? '#000000' : colors.text} />)}</Picker></View>
               </View>
             </View>
             <TouchableOpacity style={s.saveBtn} onPress={save} disabled={saving}>
-              {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={s.saveTxt}>🔔  Set Reminder</Text>}
+              {saving ? <ActivityIndicator color={colors.bg} /> : <Text style={s.saveTxt}>🔔  Set Reminder</Text>}
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -142,34 +147,33 @@ export default function RemindersScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SPACING.xl },
-  title: { fontFamily: FONTS.display, fontSize: 28, color: COLORS.text },
-  addBtn: { backgroundColor: COLORS.gold, borderRadius: RADIUS.md, paddingVertical: 9, paddingHorizontal: 16 },
-  addBtnTxt: { color: COLORS.bg, fontFamily: FONTS.bold, fontSize: 13 },
+  title: { fontFamily: FONTS.display, fontSize: 28, color: colors.text },
+  addBtn: { backgroundColor: colors.gold, borderRadius: RADIUS.md, paddingVertical: 9, paddingHorizontal: 16 },
+  addBtnTxt: { color: colors.bg, fontFamily: FONTS.bold, fontSize: 13 },
   container: { paddingHorizontal: SPACING.xl, paddingBottom: SPACING.xl },
   groupLbl: { fontSize: 11, fontFamily: FONTS.bold, letterSpacing: 1.5, marginBottom: 8, marginTop: 4 },
-  remCard: { backgroundColor: COLORS.card, borderRadius: RADIUS.lg, padding: SPACING.lg, borderWidth: 1, borderColor: COLORS.border, marginBottom: 8, borderLeftWidth: 4 },
+  remCard: { backgroundColor: colors.card, borderRadius: RADIUS.lg, padding: SPACING.lg, borderWidth: 1, borderColor: colors.border, marginBottom: 8, borderLeftWidth: 4 },
   remTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  remTitle: { fontSize: 14, color: COLORS.text, fontFamily: FONTS.semiBold },
-  remDate: { fontSize: 11, color: COLORS.soft, fontFamily: FONTS.regular, marginTop: 2 },
+  remTitle: { fontSize: 14, color: colors.text, fontFamily: FONTS.semiBold },
+  remDate: { fontSize: 11, color: colors.soft, fontFamily: FONTS.regular, marginTop: 2 },
   remBottom: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  remAmt: { fontFamily: FONTS.mono, fontSize: 13, fontWeight: '700', color: COLORS.text, marginRight: 'auto' },
+  remAmt: { fontFamily: FONTS.mono, fontSize: 13, fontWeight: '700', color: colors.text, marginRight: 'auto' },
   statusBadge: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
   statusTxt: { fontSize: 10, fontFamily: FONTS.bold },
   xBtn: { backgroundColor: 'rgba(224,82,82,0.12)', borderRadius: 6, width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
-  xTxt: { color: COLORS.red, fontSize: 11, fontWeight: '700' },
-  emptyCard: { backgroundColor: COLORS.card, borderRadius: RADIUS.xl, padding: SPACING.xl * 1.5, borderWidth: 1, borderColor: COLORS.border, alignItems: 'center' },
-  emptyTxt: { color: COLORS.text, fontSize: 16, fontFamily: FONTS.semiBold, marginBottom: 8 },
-  emptySub: { color: COLORS.muted, fontSize: 13, fontFamily: FONTS.regular, textAlign: 'center', lineHeight: 20 },
-  modal: { flex: 1, backgroundColor: COLORS.bg, padding: SPACING.xl },
+  xTxt: { color: colors.red, fontSize: 11, fontWeight: '700' },
+  emptyCard: { backgroundColor: colors.card, borderRadius: RADIUS.xl, padding: SPACING.xl * 1.5, borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
+  emptyTxt: { color: colors.text, fontSize: 16, fontFamily: FONTS.semiBold, marginBottom: 8 },
+  emptySub: { color: colors.muted, fontSize: 13, fontFamily: FONTS.regular, textAlign: 'center', lineHeight: 20 },
+  modal: { flex: 1, backgroundColor: colors.bg, padding: SPACING.xl },
   modalHdr: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 },
-  modalTitle: { fontFamily: FONTS.display, fontSize: 22, color: COLORS.text },
-  closeBtn: { backgroundColor: COLORS.el, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.sm, width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  lbl: { fontSize: 11, color: COLORS.soft, fontFamily: FONTS.semiBold, letterSpacing: 1, marginBottom: 6, marginTop: 12 },
-  inp: { backgroundColor: COLORS.el, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, padding: 12, color: COLORS.text, fontSize: 14, fontFamily: FONTS.regular },
-  pickerWrap: { backgroundColor: COLORS.el, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, overflow: 'hidden' },
-  picker: { color: COLORS.text, height: 50 },
-  saveBtn: { backgroundColor: COLORS.gold, borderRadius: RADIUS.md, padding: 14, alignItems: 'center', marginTop: 20, marginBottom: 32 },
-  saveTxt: { color: COLORS.bg, fontFamily: FONTS.bold, fontSize: 15 },
-});
+  modalTitle: { fontFamily: FONTS.display, fontSize: 22, color: colors.text },
+  closeBtn: { backgroundColor: colors.el, borderWidth: 1, borderColor: colors.border, borderRadius: RADIUS.sm, width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  lbl: { fontSize: 11, color: colors.soft, fontFamily: FONTS.semiBold, letterSpacing: 1, marginBottom: 6, marginTop: 12 },
+  inp: { backgroundColor: colors.el, borderWidth: 1, borderColor: colors.border, borderRadius: RADIUS.md, padding: 12, color: colors.text, fontSize: 14, fontFamily: FONTS.regular },
+  pickerWrap: { backgroundColor: colors.el, borderWidth: 1, borderColor: colors.border, borderRadius: RADIUS.md, overflow: 'hidden' },
+  picker: { color: colors.text, height: 50 },
+  saveBtn: { backgroundColor: colors.gold, borderRadius: RADIUS.md, padding: 14, alignItems: 'center', marginTop: 20, marginBottom: 32 },
+  saveTxt: { color: colors.bg, fontFamily: FONTS.bold, fontSize: 15 } });

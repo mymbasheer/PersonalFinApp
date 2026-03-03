@@ -1,0 +1,62 @@
+# ── Node
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+.yarn/
+
+# ── React Native
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# ── Android
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/captures/
+mobile/android/keystores/
+*.apk
+
+# ── iOS
+mobile/ios/Pods/
+mobile/ios/build/
+mobile/ios/*.xcworkspace/xcuserdata
+*.ipa
+*.xcuserdata
+
+# ── Metro bundler
+.metro-health-check*
+.metro-bundler-*
+
+# ── Environment
+.env
+.env.*
+!.env.example
+
+# ── Temp / Debug artifacts
+*.txt
+!README.md
+!BUILD_APK_GUIDE.md
+*.py
+tempApp2/
+
+# ── IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+.DS_Store
+Thumbs.db
+
+# ── TypeScript
+*.tsbuildinfo
+
+# ── Logs
+logs/
+*.log

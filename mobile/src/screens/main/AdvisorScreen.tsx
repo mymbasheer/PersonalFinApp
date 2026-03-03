@@ -4,7 +4,8 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Activi
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../services/api';
 import { calcAPIT } from '../../utils/tax';
-import { COLORS, FONTS, SPACING, RADIUS } from '../../utils/constants';
+import { FONTS, SPACING, RADIUS } from '../../utils/constants';
+import { useThemeStore } from '../../store/themeStore';
 
 interface Message { role: 'user'|'assistant'; content: string; }
 
@@ -18,6 +19,8 @@ const QUICK_PROMPTS = [
 ];
 
 export default function AdvisorScreen() {
+  const { colors } = useThemeStore();
+  const s = getStyles(colors);
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([
     { role:'assistant', content:`Hello ${user?.first_name||''}! 👋\n\nI'm your AI Financial Advisor, powered by Claude. I can help you with:\n\n• IRD 2025 APIT tax planning\n• Sri Lanka investment options\n• Budget optimisation advice\n• EPF / ETF strategies\n• Loan vs invest decisions\n• CEB, vehicle licence, gold market info\n\nWhat would you like to know?` }
@@ -55,8 +58,7 @@ Context: Sri Lanka financial system, IRD 2025 tax rates, CBSL regulations, Colom
     try {
       const resp = await api.post('/advisor/chat', {
         messages: updated.map(m=>({ role:m.role, content:m.content })),
-        context: buildContext(),
-      });
+        context: buildContext() });
       setMessages(prev=>[...prev, { role:'assistant', content: resp.data.reply }]);
     } catch (e:any) {
       setMessages(prev=>[...prev, { role:'assistant', content:`Sorry, I couldn't connect to the advisor. Please check your internet connection and try again.\n\nError: ${e.message}` }]);
@@ -111,13 +113,13 @@ Context: Sri Lanka financial system, IRD 2025 tax rates, CBSL regulations, Colom
           value={input}
           onChangeText={setInput}
           placeholder="Ask about tax, investments, budgeting…"
-          placeholderTextColor={COLORS.muted}
+          placeholderTextColor={colors.muted}
           multiline
           maxLength={500}
           onSubmitEditing={()=>send()}
         />
         <TouchableOpacity style={[s.sendBtn,(!input.trim()||loading)&&{opacity:0.5}]} onPress={()=>send()} disabled={!input.trim()||loading}>
-          {loading?<ActivityIndicator size="small" color={COLORS.bg}/>:<Text style={s.sendTxt}>→</Text>}
+          {loading?<ActivityIndicator size="small" color={colors.bg}/>:<Text style={s.sendTxt}>→</Text>}
         </TouchableOpacity>
       </View>
 
@@ -126,28 +128,27 @@ Context: Sri Lanka financial system, IRD 2025 tax rates, CBSL regulations, Colom
   );
 }
 
-const s = StyleSheet.create({
-  root:      { flex:1, backgroundColor:COLORS.bg },
+const getStyles = (colors: any) => StyleSheet.create({
+  root:      { flex:1, backgroundColor:colors.bg },
   header:    { flexDirection:'row', justifyContent:'space-between', alignItems:'flex-start', padding:SPACING.xl, paddingBottom:SPACING.md },
-  title:     { fontFamily:FONTS.display, fontSize:26, color:COLORS.text },
-  sub:       { fontSize:12, color:COLORS.soft, fontFamily:FONTS.regular, marginTop:2 },
-  clearBtn:  { borderWidth:1, borderColor:COLORS.border, borderRadius:RADIUS.sm, paddingVertical:5, paddingHorizontal:12 },
-  clearTxt:  { color:COLORS.soft, fontSize:12, fontFamily:FONTS.medium },
-  chat:      { flex:1, backgroundColor:COLORS.bg },
+  title:     { fontFamily:FONTS.display, fontSize:26, color:colors.text },
+  sub:       { fontSize:12, color:colors.soft, fontFamily:FONTS.regular, marginTop:2 },
+  clearBtn:  { borderWidth:1, borderColor:colors.border, borderRadius:RADIUS.sm, paddingVertical:5, paddingHorizontal:12 },
+  clearTxt:  { color:colors.soft, fontSize:12, fontFamily:FONTS.medium },
+  chat:      { flex:1, backgroundColor:colors.bg },
   bubble:    { maxWidth:'88%', borderRadius:RADIUS.lg, padding:SPACING.lg, marginBottom:12 },
-  aiBubble:  { alignSelf:'flex-start', backgroundColor:COLORS.card, borderWidth:1, borderColor:'rgba(212,168,67,0.2)', borderBottomLeftRadius:4 },
+  aiBubble:  { alignSelf:'flex-start', backgroundColor:colors.card, borderWidth:1, borderColor:'rgba(212,168,67,0.2)', borderBottomLeftRadius:4 },
   userBubble:{ alignSelf:'flex-end', backgroundColor:'rgba(212,168,67,0.15)', borderWidth:1, borderColor:'rgba(212,168,67,0.3)', borderBottomRightRadius:4 },
-  aiLabel:   { fontSize:10, color:COLORS.gold, fontFamily:FONTS.bold, letterSpacing:1, marginBottom:6 },
+  aiLabel:   { fontSize:10, color:colors.gold, fontFamily:FONTS.bold, letterSpacing:1, marginBottom:6 },
   bubbleTxt: { fontSize:13, fontFamily:FONTS.regular, lineHeight:20 },
-  aiTxt:     { color:COLORS.text },
-  userTxt:   { color:COLORS.text },
-  dot:       { width:8, height:8, borderRadius:4, backgroundColor:COLORS.gold },
+  aiTxt:     { color:colors.text },
+  userTxt:   { color:colors.text },
+  dot:       { width:8, height:8, borderRadius:4, backgroundColor:colors.gold },
   quickRow:  { paddingVertical:SPACING.sm },
-  quickBtn:  { backgroundColor:COLORS.card, borderWidth:1, borderColor:COLORS.border, borderRadius:RADIUS.lg, paddingVertical:7, paddingHorizontal:14, maxWidth:220 },
-  quickTxt:  { color:COLORS.soft, fontSize:12, fontFamily:FONTS.regular },
+  quickBtn:  { backgroundColor:colors.card, borderWidth:1, borderColor:colors.border, borderRadius:RADIUS.lg, paddingVertical:7, paddingHorizontal:14, maxWidth:220 },
+  quickTxt:  { color:colors.soft, fontSize:12, fontFamily:FONTS.regular },
   inputRow:  { flexDirection:'row', gap:8, padding:SPACING.lg, paddingTop:0 },
-  inp:       { flex:1, backgroundColor:COLORS.card, borderWidth:1, borderColor:COLORS.border, borderRadius:RADIUS.lg, padding:12, color:COLORS.text, fontSize:14, fontFamily:FONTS.regular, maxHeight:120 },
-  sendBtn:   { width:44, height:44, backgroundColor:COLORS.gold, borderRadius:22, alignItems:'center', justifyContent:'center', alignSelf:'flex-end' },
-  sendTxt:   { color:COLORS.bg, fontSize:20, fontWeight:'700' },
-  disclaimer:{ textAlign:'center', color:COLORS.muted, fontSize:10, fontFamily:FONTS.regular, paddingHorizontal:SPACING.xl, paddingBottom:SPACING.sm },
-});
+  inp:       { flex:1, backgroundColor:colors.card, borderWidth:1, borderColor:colors.border, borderRadius:RADIUS.lg, padding:12, color:colors.text, fontSize:14, fontFamily:FONTS.regular, maxHeight:120 },
+  sendBtn:   { width:44, height:44, backgroundColor:colors.gold, borderRadius:22, alignItems:'center', justifyContent:'center', alignSelf:'flex-end' },
+  sendTxt:   { color:colors.bg, fontSize:20, fontWeight:'700' },
+  disclaimer:{ textAlign:'center', color:colors.muted, fontSize:10, fontFamily:FONTS.regular, paddingHorizontal:SPACING.xl, paddingBottom:SPACING.sm } });
