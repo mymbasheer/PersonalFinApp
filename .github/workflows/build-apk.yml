@@ -69,9 +69,9 @@ jobs:
               -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
               -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
           else
-            # Build unsigned debug APK if no signing keys configured
-            echo "⚠ No signing keys — building debug APK"
-            ./gradlew assembleDebug
+            # Build unsigned release APK if no signing keys configured
+            echo "⚠ No signing keys — building unsigned release APK"
+            ./gradlew assembleRelease
           fi
 
       # ── 8. Upload APK as artifact (download from GitHub Actions page)
