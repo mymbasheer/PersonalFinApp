@@ -4,6 +4,7 @@
 // Set API_BASE to your backend IP/hostname.
 // ─────────────────────────────────────────────────
 
+// Triggering a fresh GitHub Actions build
 /** Base URL for the backend REST API (no trailing slash) */
 export const API_BASE = 'http://192.168.1.18:3000';
 
